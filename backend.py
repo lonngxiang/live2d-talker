@@ -12,8 +12,7 @@ from openai import OpenAI
 
 
 app = Flask(__name__)
-# CORS(app)  # 启用 CORS
-# CORS(app, resources={r"/*": {"origins": "http://127.0.0.1:8080"}})
+
 CORS(app, resources={r"/*": {"origins": "http://127.0.0.1:8080", "methods": ["GET", "POST"]}})
 
 
@@ -75,7 +74,7 @@ def get_asr(audio_file):
     return res
 
 def get_llm_response(input_text):
-    client = OpenAI(api_key="sk-689dd0af460f498dbe83dee82d37f79c", base_url="https://api.deepseek.com")
+    client = OpenAI(api_key="sk-****", base_url="https://api.deepseek.com")
 
     response = client.chat.completions.create(
         model="deepseek-chat",
