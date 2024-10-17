@@ -10,7 +10,7 @@ Live2D Digital Human Real-Time Voice Chat, Supporting ASR, LLM, and TTS Full Pro
 
 ![](demo1.png)
 
-### 本地运行
+## 本地运行
 ```
 # 安装http-server
 npm install -g http-server
@@ -21,4 +21,7 @@ http-server .
 ##后端api服务
 python backed.py
 ```
+
+## 参考
+ [live2dSpeek](https://github.com/lyz1810/live2dSpeek)
 
