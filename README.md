@@ -1,4 +1,4 @@
-## live2d-talk
+## live2d-talker
 Live2D Digital Human Real-Time Voice Chat, Supporting ASR, LLM, and TTS Full Process
 
 
