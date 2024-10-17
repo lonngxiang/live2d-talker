@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <script src="./js/live2dcubismcore.min.js"></script>
+    <script src="./js/live2d.min.js"></script>
+    <script src="./js/pixi.min.js"></script>
+    <script src="./js/cubism4.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <title>Live2D Chat with OpenAI</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        #container {
+            display: flex;
+            height: 100%;
+            width: 100%;
+        }
+        #canvas-container {
+            flex: 1;
+            height: 100%;
+        }
+        #canvas {
+            width: 100%;
+            height: 100%;
+        }
+        #chatbox {
+            width: 300px;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #ccc;
+            background-color: white;
+        }
+        #chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+        #chat-input {
+            display: flex;
+            padding: 10px;
+            background-color: #fff;
+        }
+        #user-input {
+            flex: 1;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        #send-btn {
+            margin-left: 5px;
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .message {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+<div id="container">
+    <div id="canvas-container">
+        <canvas id="canvas"></canvas>
+    </div>
+    <div id="chatbox">
+        <div id="chat-messages"></div>
+        <div id="chat-input">
+            <input type="text" id="user-input" placeholder="Type your message here...">
+            <button id="send-btn">Send</button>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    // const cubism4Model = "./assets/kei_vowels_pro/kei_vowels_pro.model3.json";
+    const cubism4Model = "./assets/Hiyori/Hiyori.model3.json";
+    const live2d = PIXI.live2d;
+    let model;
+
+    (async function main() {
+        const app = new PIXI.Application({
+            view: document.getElementById("canvas"),
+            autoStart: true,
+            resizeTo: document.getElementById("canvas-container"),
+            backgroundColor: 0x333333
+        });
+
+        model = await live2d.Live2DModel.from(cubism4Model);
+        app.stage.addChild(model);
+
+        const scaleX = app.screen.width / model.width;
+        const scaleY = app.screen.height / model.height;
+
+        model.scale.set(Math.min(scaleX, scaleY));
+        model.x = (app.screen.width - model.width * model.scale.x) / 2;
+        model.y = (app.screen.height - model.height * model.scale.y) / 2;
+
+        setupChatInterface();
+    })();
+
+    function setupChatInterface() {
+        const sendBtn = document.getElementById('send-btn');
+        const userInput = document.getElementById('user-input');
+
+        sendBtn.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    }
+
+    async function sendMessage() {
+        const userInput = document.getElementById('user-input');
+        const message = userInput.value.trim();
+        if (message === '') return;
+
+        addMessageToChat('You', message);
+        userInput.value = '';
+
+        try {
+            const response = await axios.post('https://api.deepseek.com/v1/chat/completions', {
+                model: "deepseek-chat",
+                messages: [{ role: "user", content: message }]
+            }, {
+                headers: {
+                    'Authorization': 'Bearer sk-689dd0af460f498dbe83dee82d37f79c',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const aiMessage = response.data.choices[0].message.content;
+            addMessageToChat('AI', aiMessage);
+            speakMessage(aiMessage);
+        } catch (error) {
+            console.error('Error communicating with OpenAI:', error);
+            addMessageToChat('System', 'Sorry, there was an error processing your request.');
+        }
+    }
+
+    function addMessageToChat(sender, message) {
+        const chatMessages = document.getElementById('chat-messages');
+        const messageElement = document.createElement('div');
+        messageElement.className = 'message';
+        messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
+        chatMessages.appendChild(messageElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function speakMessage(text) {
+        axios.get(`http://127.0.0.1:2020/dealAudio?file_name=test.mp3&voice=xiaoxiao&text=${encodeURIComponent(text)}`)
+            .then(response => {
+                const audioUrl = response.data + "?v=" + new Date().getTime();
+                talk(model, audioUrl);
+            })
+            .catch(error => {
+                console.error('Error generating speech:', error);
+            });
+    }
+
+    function talk(model, audio) {
+        model.speak(audio, {
+            volume: 1,
+            expression: 8,
+            resetExpression: true,
+            crossOrigin: "anonymous"
+        });
+    }
+</script>
+
+</body>
+</html>
