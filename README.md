@@ -4,7 +4,7 @@
 - 本项目是h5前端代码，需要调用后端音频生成接口，后端是用之前开源的项目 [edge-tts](https://github.com/lyz1810/edge-tts)
 
 
-![](img.png)
+![](demo1.png)
 
 ### 本地运行
 ```
